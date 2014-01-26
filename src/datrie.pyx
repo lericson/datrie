@@ -305,6 +305,39 @@ cdef class BaseTrie:
         finally:
             cdatrie.trie_state_free(state)
 
+    def substring_items(self, unicode key):
+        return self._substring_items(key)
+
+    cdef list _substring_items(self, unicode key):
+        '''Find all substring items in key'''
+        cdef cdatrie.TrieState* state = cdatrie.trie_root(self._c_trie)
+        cdef list result = []
+        cdef int begin = 0
+        cdef int key_len = len(key)
+
+        if state == NULL:
+            raise MemoryError()
+
+        try:
+            while begin < key_len:
+                subkey = key[begin:]
+                #result.extend(self._prefix_items(subkey))
+                cdatrie.trie_state_rewind(state)
+                end = 1
+                for char in subkey:
+                    if not cdatrie.trie_state_walk(state, <cdatrie.AlphaChar> char):
+                        break
+                    if cdatrie.trie_state_is_terminal(state): # word is found
+                        result.append(
+                            (subkey[:end],
+                             cdatrie.trie_state_get_terminal_data(state))
+                        )
+                    end += 1
+                begin += 1
+        finally:
+            cdatrie.trie_state_free(state)
+        return result
+
     def prefix_values(self, unicode key):
         '''
         Returns a list of the values of this trie that are associated

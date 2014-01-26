@@ -1,7 +1,9 @@
 #! /usr/bin/env python
 import os
-from distutils.core import setup
-from distutils.extension import Extension
+try:
+    from setuptools import setup, Extension
+except ImportError:
+    from distutils import setup, Extension
 #from Cython.Distutils import build_ext
 
 LIBDATRIE_DIR = 'libdatrie/datrie'
